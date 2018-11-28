@@ -12,9 +12,5 @@ pip install .
 
 ## Helpful links
 
-[Distributing Jupyter Extensions as Python Packages - Server Extension](
-https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/
-Distributing%20Jupyter%20Extensions%20as%20Python%20Packages.html#Example---Server-extension)
-[Custom request handlers - Writing a notebook server extension](
-https://jupyter-notebook.readthedocs.io/en/stable/extending/handlers.html
-#writing-a-notebook-server-extension)
+[Distributing Jupyter Extensions as Python Packages - Server Extension](https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Distributing%20Jupyter%20Extensions%20as%20Python%20Packages.html#Example---Server-extension)
+[Custom request handlers - Writing a notebook server extension](https://jupyter-notebook.readthedocs.io/en/stable/extending/handlers.html#writing-a-notebook-server-extension)
