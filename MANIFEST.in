@@ -1,0 +1,2 @@
+recursive-include etc *.json
+recursive-include nb_connect_existing/static *.js

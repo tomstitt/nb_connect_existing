@@ -1,0 +1,5 @@
+{
+  "load_extensions": {
+    "nb_connect_existing/index": true
+  }
+}
