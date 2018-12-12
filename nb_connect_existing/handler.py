@@ -96,5 +96,4 @@ class ConnectExistingHandler(IPythonHandler):
             "session": session_model,
             "notebook": {"path": nb_model["path"]}}))
 
-
 handlers = [("/existing/%s" % r"(.+)", ConnectExistingHandler)]

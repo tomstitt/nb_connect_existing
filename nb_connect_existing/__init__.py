@@ -1,3 +1,5 @@
+from notebook.utils import url_path_join
+
 from .handler import handlers
 
 
@@ -18,4 +20,11 @@ def _jupyter_nbextension_paths():
 
 def load_jupyter_server_extension(nbapp):
     host_pattern = '.*$'
-    nbapp.web_app.add_handlers(host_pattern, handlers)
+    base_url = nbapp.web_app.settings["base_url"]
+
+    # add in the base url
+    updated_handlers = []
+    for handler in handlers:
+        pattern = url_path_join(base_url, handler[0])
+        updated_handlers.append(tuple([pattern] + list(handler[1:])))
+    nbapp.web_app.add_handlers(host_pattern, updated_handlers)

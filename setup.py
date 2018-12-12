@@ -1,8 +1,10 @@
 import setuptools
 
+distname = "nb_connect_existing"
+
 setuptools.setup(
-    name="NBConnectExisting",
-    packages=["nb_connect_existing"],
+    name=distname,
+    packages=[distname],
     include_package_data=True,
     data_files=[
         # like `jupyter nbextension install --sys-prefix`
