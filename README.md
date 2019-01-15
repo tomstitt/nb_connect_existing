@@ -1,7 +1,11 @@
 # Notebook Connect Existing
 
 Jupyter Notebook tree (front page) extension that lets you connect to existing kernels.
+An ssh tunnel can be automatically created for non-local kernels but for now the host with the kernel
+must be visable from the host of the notebook and either a) accessible with passwordless ssh or b)
+accessible via munge rsh to the kernel host and passwordless ssh back to the notebook host.
 
+(out-of-date)
 ![demo](demo.gif)
 
 ## Install

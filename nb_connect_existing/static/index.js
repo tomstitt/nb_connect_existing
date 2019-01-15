@@ -1,16 +1,34 @@
 define(['jquery', 'base/js/namespace', 'base/js/dialog', 'base/js/utils'], function($, jupyter, dialog, utils) {
   'use strict';
 
-  let message = `Connect to an existing kernel launched outside of the notebook.<br/>
-<br/>
-You can either enter the full path to the connection file or just the base name if you started the kernel in the usual way.`;
+  let message = `Connect to an existing kernel launched outside of the notebook.<br/><br/>
+If the kernel you want to connect to was the last kernel launched you don't need to enter 
+anything for the connection file, otherwise enter either the full path to the 
+connection file or just the base name if you started the kernel in the usual way.
+If the kernel isn't running on localhost please provide the server's name but note that 
+tunneling requires passwordless ssh for now.`;
 
-  function open_nb(conn_file) {
-    var url = utils.url_path_join(utils.get_body_data('baseUrl'), 'existing', conn_file);
+  function open_nb(conn_file, server="", port="", transport="") {
+    var url = utils.url_path_join(utils.get_body_data('baseUrl'), 'existing');
     var w = window.open('', '_blank');
+
+    var data = {};
+
+    if (conn_file != "") { data.conn_file = conn_file; }
+    if (server != "") { data.server = server; }
+    if (port != "") { data.port = port; }
+    if (transport != "") { data.transport = transport; }
+
+    var settings = {
+      type: 'POST',
+      data: JSON.stringify(data),
+      contentType: 'application/json',
+      dataType: 'json'
+    };
+
     w.document.write('<p>trying to connect, please wait...<p/>');
-    
-    utils.promising_ajax(url, {type: "POST"}).then(function(data) {
+
+    utils.promising_ajax(url, settings).then(function(data) {
       console.log(data);
       w.location = utils.url_path_join(utils.get_body_data('baseUrl'), 'notebooks', data.notebook.path);
     }).catch(function(e) {
@@ -40,25 +58,54 @@ You can either enter the full path to the connection file or just the base name 
   }
 
   function show_modal() {
-    var body = $('<div/>');
+    var radio = $('<tr/>')
+      .append($('<td/>')
+        .css('text-align', 'right')
+        .css('padding', '5px')
+        .append($('<label/>')
+          .text("Protocol")))
+      .append($('<td/>')
+        .css('padding', '5px')
+        .append($('<input/>')
+          .attr('type', 'radio')
+          .attr('name', 'transport-radio')
+          .attr('value', 'ipc')
+          .attr('checked', 'checked'))
+        .append($('<label/>')
+          .css('padding-right', '10px')
+          .css('padding-left', '5px')
+          .text("ipc"))
+        .append($('<input/>')
+          .attr('type', 'radio')
+          .attr('name', 'transport-radio')
+          .attr('value', 'tcp')
+          .html('tcp'))
+        .append($('<label/>')
+          .css('padding-left', '5px')
+          .text("tcp")));
 
-    $('<div/>')
-      .html(message)
-      .appendTo(body);
-
-    $('<br/>').appendTo(body);
-
-    $('<table/>')
-      .append(row('Connection file:', 'connection-file', 'kernal-abc.json'))
-      .appendTo(body);
-    // TODO: for kernels not on localhost
-    //.append(row('Server', 'server-name'))
+    var body = $('<div/>')
+      .append($('<div/>')
+        .html(message))
+      .append($('<br/>'))
+      .append($('<table/>')
+        .append(row('Connection file', 'connection-file-text',
+            '<most recent kernel-abc.json>'))
+        .append(row('Server', 'server-name-text', 'localhost'))
+        .append(row('Port', 'port-number-text', '22'))
+        .append(radio));
 
     dialog.modal({
       title: "Connect to an existing kernel",
       buttons: {
         Connect: {
-          class: 'btn-primary', click: function() { open_nb($('#connection-file').val()); }
+          class: 'btn-primary', click: function() {
+            open_nb($('#connection-file-text').val(),
+              $('#server-name-text').val(),
+              $('#port-number-text').val(),
+              $('input[name="transport-radio"]:checked').val()
+            );
+          }
         }
       },
       body: body

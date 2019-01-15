@@ -7,17 +7,14 @@ setuptools.setup(
     packages=[distname],
     include_package_data=True,
     data_files=[
-        # like `jupyter nbextension install --sys-prefix`
-        ("share/jupyter/nbextensions/nb_connect_existing", [
-            "nb_connect_existing/static/index.js",
+        ("share/jupyter/nbextensions/%s" % distname, [
+            "%s/static/index.js" % distname,
         ]),
-        # like `jupyter nbextension enable --sys-prefix`
         ("etc/jupyter/nbconfig/tree.d", [
-            "etc/jupyter/nbconfig/tree.d/nb_connect_existing.json"
+            "etc/jupyter/nbconfig/tree.d/%s.json" % distname
         ]),
-        # like `jupyter serverextension enable --sys-prefix`
         ("etc/jupyter/jupyter_notebook_config.d", [
-            "etc/jupyter/jupyter_notebook_config.d/nb_connect_existing.json"
+            "etc/jupyter/jupyter_notebook_config.d/%s.json" % distname
         ])
     ],
     zip_safe=False
