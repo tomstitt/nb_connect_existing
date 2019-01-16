@@ -1,10 +1,3 @@
-#
-# tunnel.py
-#
-# tunnel.py helps to ssh tunnel between a client and a server on LC
-# Sockets can be IP-based or IPC-based
-#
-
 from __future__ import print_function
 import socket
 import os
