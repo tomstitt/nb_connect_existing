@@ -8,17 +8,31 @@ import pexpect
 from subprocess import Popen, DEVNULL
 from zmq.ssh.tunnel import select_random_ports
 from jupyter_core.paths import jupyter_runtime_dir
+from jupyter_client.connect import port_names
 
 
 localhost = socket.gethostname()
 runtime_dir = jupyter_runtime_dir()
-port_names = ["hb_port", "stdin_port", "shell_port", "iopub_port", "control_port"]
 connection_refused = "Connection refused"
 unknown_host = "Are you sure you want to continue connecting"
 auth_fail = "Authentication failed."
 permission_denied = "Permission Denied."
-ssh_cmd = "ssh -S none -nT -{fwd_flg} {fwd_args} -p {ssh_port} {server} sleep {sleep}"
+
+host_check_opt = "-oStrictHostKeyChecking=no"
+ssh_cmd = "ssh {host_check_opt} -S none -nT -{fwd_flg} {fwd_args} -p {ssh_port} {server} sleep {sleep}"
 mrsh_cmd = "mrsh {server} {ssh_cmd}"
+verify_ssh = "ssh {host_check_opt} -p {port} {server} true"
+verify_mrsh = "mrsh {server} {ssh_cmd}"
+
+
+# if use if False we use the host_check_opt which turns off
+# strict host checking and stops "key cannot be verified" 
+# tunnel failures. would be good to make this option
+# toggleable from request
+def use_host_check(use):
+    if not use:
+        return host_check_opt
+    return ""
 
 
 class TunnelError(RuntimeError):
@@ -26,7 +40,7 @@ class TunnelError(RuntimeError):
 
 
 def ssh_tunnel(logger, mode, ltransport, lport, rtransport, rport, server, user,
-        ssh_port, sleep_duration=30, silent=True):
+        ssh_port, check_hosts=False, sleep_duration=30, silent=True):
     """Open ssh tunnel from lport on localhost to rport on server
 
     ssh -{L|R} {<local port>|<local socket>}:{<host>:<remote port>|<remote socket>}
@@ -46,13 +60,14 @@ def ssh_tunnel(logger, mode, ltransport, lport, rtransport, rport, server, user,
     if ltransport == "ipc" and os.path.exists(lport):
         os.remove(lport)
 
+    host_check_opt = use_host_check(check_hosts)
+
     if mode == "ssh":
-        cmd = ssh_cmd.format(fwd_flg="L", fwd_args=forwarding_args,
+        cmd = ssh_cmd.format(fwd_flg="L", fwd_args=forwarding_args, host_check_opt=host_check_opt,
                 server=server, ssh_port=ssh_port, sleep=sleep_duration)
     elif mode == "mrsh":
-        cmd = mrsh_cmd.format(server=server, ssh_cmd=ssh_cmd.format(
-            fwd_flg="R", fwd_args=forwarding_args, server=localhost,
-            ssh_port=ssh_port, sleep=sleep_duration))
+        cmd = mrsh_cmd.format(server=server, ssh_cmd=ssh_cmd.format(fwd_flg="R", fwd_args=forwarding_args,
+            host_check_opt=host_check_opt, server=localhost, ssh_port=ssh_port, sleep=sleep_duration))
     else:
         raise TunnelError("Unknown mode %s" % mode)
 
@@ -66,8 +81,8 @@ def ssh_tunnel(logger, mode, ltransport, lport, rtransport, rport, server, user,
     Popen(cmd.split(), close_fds=True, preexec_fn=os.setpgrp, **args)
 
 
-def try_ssh(logger, server, port, env, timeout=2):
-    cmd = "ssh -p %d %s true" % (port, server)
+def try_ssh(logger, server, port, env, check_hosts=False, timeout=2):
+    cmd = verify_ssh.format(port=port, server=server, host_check_opt=use_host_check(check_hosts))
     logger.info("Testing ssh> %s" % cmd)
     with pexpect.spawn(cmd, env=env, timeout=timeout) as p:
         index = p.expect([pexpect.EOF, connection_refused, unknown_host, auth_fail, pexpect.TIMEOUT])
@@ -89,8 +104,9 @@ def try_ssh(logger, server, port, env, timeout=2):
     return False
 
 
-def try_mrsh(logger, server, port, env, timeout=2):
-    cmd = "mrsh %s ssh -p %d %s true" % (server, port, localhost)
+def try_mrsh(logger, server, port, env, check_hosts=False, timeout=2):
+    cmd = verify_mrsh.format(server=server, ssh_cmd=verify_ssh.format(port=port, server=localhost,
+        host_check_opt=use_host_check(check_hosts)))
     logger.info("Testing mrsh> %s" % cmd)
     with pexpect.spawn(cmd, env=env, timeout=2) as p:
         index = p.expect([pexpect.EOF, connection_refused, permission_denied, pexpect.TIMEOUT])
