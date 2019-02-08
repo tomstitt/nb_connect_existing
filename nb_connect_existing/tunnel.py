@@ -81,7 +81,7 @@ def ssh_tunnel(logger, mode, ltransport, lport, rtransport, rport, server, user,
     Popen(cmd.split(), close_fds=True, preexec_fn=os.setpgrp, **args)
 
 
-def try_ssh(logger, server, port, env, check_hosts=False, timeout=2):
+def try_ssh(logger, server, port, env, check_hosts=False, timeout=5):
     cmd = verify_ssh.format(port=port, server=server, host_check_opt=use_host_check(check_hosts))
     logger.info("Testing ssh> %s" % cmd)
     with pexpect.spawn(cmd, env=env, timeout=timeout) as p:
@@ -104,11 +104,11 @@ def try_ssh(logger, server, port, env, check_hosts=False, timeout=2):
     return False
 
 
-def try_mrsh(logger, server, port, env, check_hosts=False, timeout=2):
+def try_mrsh(logger, server, port, env, check_hosts=False, timeout=5):
     cmd = verify_mrsh.format(server=server, ssh_cmd=verify_ssh.format(port=port, server=localhost,
         host_check_opt=use_host_check(check_hosts)))
     logger.info("Testing mrsh> %s" % cmd)
-    with pexpect.spawn(cmd, env=env, timeout=2) as p:
+    with pexpect.spawn(cmd, env=env, timeout=timeout) as p:
         index = p.expect([pexpect.EOF, connection_refused, permission_denied, pexpect.TIMEOUT])
     if index == 0:
         if len(p.before) == 0:
