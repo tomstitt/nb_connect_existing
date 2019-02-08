@@ -2,8 +2,6 @@ from __future__ import print_function
 import socket
 import os
 import getpass
-import time
-import errno
 import pexpect
 from subprocess import Popen, DEVNULL
 from zmq.ssh.tunnel import select_random_ports
@@ -26,7 +24,7 @@ verify_mrsh = "mrsh {server} {ssh_cmd}"
 
 
 # if use if False we use the host_check_opt which turns off
-# strict host checking and stops "key cannot be verified" 
+# strict host checking and stops "key cannot be verified"
 # tunnel failures. would be good to make this option
 # toggleable from request
 def use_host_check(use):
@@ -47,7 +45,7 @@ def ssh_tunnel(logger, mode, ltransport, lport, rtransport, rport, server, user,
 
     <host> is always localhost for now.
 
-    The local port is always local to the starting machine even though it is 
+    The local port is always local to the starting machine even though it is
     referred to as the remote in the ssh docs in the -R case.
     """
     if rtransport == "tcp":
@@ -139,12 +137,14 @@ def open_ssh_tunnel(logger, kernel, server, user=getpass.getuser(), transport=No
         server_info = socket.gethostbyaddr(server)
     except socket.herror:
         raise TunnelError("host %s is inaccessible" % server)
+    except socket.gaierror as e:
+        raise TunnelError(str(e))
 
     # make sure the kernel isn't on localhost
     if server_info[0] == "localhost":
         logger.info("kernel on localhost - nothing to do")
         return
-    
+
     # no gui password prompt
     env = os.environ.copy()
     env.pop("SSH_ASKPASS", None)
