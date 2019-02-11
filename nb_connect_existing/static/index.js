@@ -10,27 +10,23 @@ tunneling requires passwordless ssh for now.`;
 
   function open_nb(conn_file, server="", port="", transport="") {
     var url = utils.url_path_join(utils.get_body_data('baseUrl'), 'existing');
+
+    var params = [];
+    if (conn_file != "") { params.push("conn_file=" + conn_file); }
+    if (server != "") { params.push("server=" + server); }
+    if (port != "") { params.push("port=" + port); }
+    if (transport != "") { params.push("transport=" + transport); }
+    if (params.length > 0) { url += "?" + params.join("&"); }
+
+    // we do post so that errors pop up in an error box
+    var settings = { type: 'POST' };
+
     var w = window.open('', '_blank');
-
-    var data = {};
-
-    if (conn_file != "") { data.conn_file = conn_file; }
-    if (server != "") { data.server = server; }
-    if (port != "") { data.port = port; }
-    if (transport != "") { data.transport = transport; }
-
-    var settings = {
-      type: 'POST',
-      data: JSON.stringify(data),
-      contentType: 'application/json',
-      dataType: 'json'
-    };
-
     w.document.write('<p>trying to connect, please wait...<p/>');
 
     utils.promising_ajax(url, settings).then(function(data) {
       console.log(data);
-      w.location = utils.url_path_join(utils.get_body_data('baseUrl'), 'notebooks', data.notebook.path);
+      w.location = data.path;
     }).catch(function(e) {
       w.close()
       dialog.modal({
