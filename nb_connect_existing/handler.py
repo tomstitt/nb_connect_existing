@@ -2,11 +2,12 @@ import uuid
 import json
 import os
 
-from tornado import gen
 from ipython_genutils.py3compat import unicode_type
 from jupyter_client.connect import find_connection_file
+from jupyter_client.kernelspec import NATIVE_KERNEL_NAME
 from notebook.base.handlers import IPythonHandler
 from notebook.utils import url_path_join, url_escape
+from tornado import gen
 
 from .manager import IOLoopKernelClient
 from .tunnel import open_ssh_tunnel, TunnelError
@@ -26,6 +27,8 @@ class ConnectExistingHandler(IPythonHandler):
         timeout = self.get_argument("timeout", 5)
         transport = self.get_argument("transport", "ipc")
         port = self.get_argument("port", 22)
+        # if this isn't set opening later may open the incorrect kernel
+        kernel_name = self.get_argument("kernel_name", NATIVE_KERNEL_NAME)
 
         # validate
         if transport != "ipc" and transport != "tcp":
@@ -88,11 +91,7 @@ class ConnectExistingHandler(IPythonHandler):
         # kernel_name is not known by the existing kernel (maybe in the conn file)
         # so we need a way to look it up, otherwise the user is asked to pick a kernel
         # OR the .ipynb doesn't have the correct metadata.kernelspec info
-        # could use default kernel:
-        #  from jupyter_client.kernelspec import NATIVE_KERNEL_NAME
-        #  kernel_name = NATIVE_KERNEL_NAME
-        self.log.debug(kernel_info)
-        kernel_name = ""
+        # self.log.debug(kernel_info)
         kernel.kernel_name = kernel_name
 
         # add to kernel manager
