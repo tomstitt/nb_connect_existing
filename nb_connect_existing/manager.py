@@ -85,3 +85,4 @@ class IOLoopKernelClient(KernelClient):
     connect_iopub = as_zmqstream(KernelClient.connect_iopub)
     connect_stdin = as_zmqstream(KernelClient.connect_stdin)
     connect_hb = as_zmqstream(KernelClient.connect_hb)
+    connect_control = as_zmqstream(KernelClient.connect_control)

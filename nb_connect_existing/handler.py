@@ -9,6 +9,11 @@ from notebook.base.handlers import IPythonHandler
 from notebook.utils import url_path_join, url_escape
 from tornado import gen
 
+try:
+    from notebook.utils import maybe_future
+except ImportError:
+    from tornado.gen import maybe_future
+
 from .manager import IOLoopKernelClient
 from .tunnel import open_ssh_tunnel, TunnelError
 
@@ -75,7 +80,7 @@ class ConnectExistingHandler(IPythonHandler):
 
         # try to connect to kernel/get kernel info
         try:
-            kernel_info = yield gen.maybe_future(kernel.get_kernel_info(timeout=timeout))
+            kernel_info = yield maybe_future(kernel.get_kernel_info(timeout=timeout))
         except Exception as e:
             self.finish_error(404, str(e))
             return
@@ -104,7 +109,7 @@ class ConnectExistingHandler(IPythonHandler):
 
         # create session
         try:
-            session_model = yield gen.maybe_future(self.session_manager.create_session(path=nb_model["path"],
+            session_model = yield maybe_future(self.session_manager.create_session(path=nb_model["path"],
                 name=kernel_name, kernel_id=kernel_id, type="notebook"))
         except Exception as e:
             self.kernel_manager.shutdown_kernel(kernel_id, now=True)
@@ -116,7 +121,7 @@ class ConnectExistingHandler(IPythonHandler):
     @gen.coroutine
     def post(self):
         try:
-            url = yield gen.maybe_future(self.create_manager())
+            url = yield maybe_future(self.create_manager())
             # respond with new info
             self.set_status(201)
             self.set_header('Content-Type', 'application/json')
@@ -127,7 +132,7 @@ class ConnectExistingHandler(IPythonHandler):
     @gen.coroutine
     def get(self):
         try:
-            url = yield gen.maybe_future(self.create_manager())
+            url = yield maybe_future(self.create_manager())
             self.redirect(url)
         except:
             pass
